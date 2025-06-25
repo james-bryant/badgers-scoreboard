@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Category;
@@ -27,7 +28,9 @@ public class ScoreboardApplication extends Application {
         System.out.println(categories);
 
         FXMLLoader fxmlLoader = new FXMLLoader(ScoreboardApplication.class.getResource("main-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+        Parent root = fxmlLoader.load();
+        fxmlLoader.<MainController>getController().setOwnerStage(stage);
+        Scene scene = new Scene(root, 320, 240);
         stage.setTitle("Badgelife Trivia Scoreboard");
         stage.setScene(scene);
 

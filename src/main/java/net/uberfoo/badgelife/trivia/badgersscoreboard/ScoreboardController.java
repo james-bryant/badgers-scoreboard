@@ -1,18 +1,28 @@
 package net.uberfoo.badgelife.trivia.badgersscoreboard;
 
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import lombok.Setter;
 
-public class ScroeboardController {
+import java.io.IOException;
+
+public class ScoreboardController {
+
+    @Setter
+    private Stage ownerStage;
 
     private final Stage scoreboardStage = new Stage();
 
-    public ScroeboardController() {
+    public ScoreboardController() {
         Label scoreboardLabel = new Label("Bagelife Trivia");
 
         VBox scoreboardLayout = new VBox(10, scoreboardLabel);
@@ -39,4 +49,5 @@ public class ScroeboardController {
 
         scoreboardStage.show();
     }
+
 }
