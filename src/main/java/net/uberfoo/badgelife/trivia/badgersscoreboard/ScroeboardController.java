@@ -1,7 +1,5 @@
 package net.uberfoo.badgelife.trivia.badgersscoreboard;
 
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -12,25 +10,19 @@ import javafx.stage.StageStyle;
 
 public class ScroeboardController {
 
-    private Stage scoreboardStage = new Stage();
+    private final Stage scoreboardStage = new Stage();
 
-    @FXML
-    private Label welcomeText;
+    public ScroeboardController() {
+        Label scoreboardLabel = new Label("Bagelife Trivia");
 
-    @FXML
-    private VBox welcomeBox;
+        VBox scoreboardLayout = new VBox(10, scoreboardLabel);
+        scoreboardLayout.setAlignment(Pos.CENTER);
+        Scene secondaryScene = new Scene(scoreboardLayout);
 
-    @FXML
-    protected void onHelloButtonClick() {
-        welcomeText.setText("Welcome to JavaFX Application!");
+        // Remove window controls
+        scoreboardStage.initStyle(StageStyle.UNDECORATED);
 
-        Label secondaryLabel = new Label("Bagelife Trivia");
-
-        VBox secondaryLayout = new VBox(10, secondaryLabel);
-        secondaryLayout.setAlignment(Pos.CENTER);
-        Scene secondaryScene = new Scene(secondaryLayout);
-
-        scoreboardStage.initStyle(StageStyle.UNDECORATED); // Remove window controls
+        // Add starting scene
         scoreboardStage.setScene(secondaryScene);
 
         // Set the stage to full screen
@@ -40,17 +32,11 @@ public class ScroeboardController {
         scoreboardStage.setWidth(screenBounds.getWidth());
         scoreboardStage.setHeight(screenBounds.getHeight());
 
-        secondaryLabel.setStyle(String.format(
+        scoreboardLabel.setStyle(String.format(
                 "-fx-font-size: %dpx; -fx-font-family: 'Sans-Serif'; -fx-text-alignment: center;"
                 , Math.round(screenBounds.getHeight() / 5))
         );
 
         scoreboardStage.show();
-
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/net/uberfoo/badgelife/trivia/badgersscoreboard/categories-view.fxml"));
-        Scene categoriesScene = new Scene(loader.load());
-
-        ((Stage)welcomeBox.getScene().getWindow()).setScene(categoriesScene);
-
     }
 }

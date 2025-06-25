@@ -26,9 +26,9 @@ public class ScoreboardApplication extends Application {
         List<Category> categories = mapper.readValue(new File(filename), new TypeReference<List<Category>>() {});
         System.out.println(categories);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(ScoreboardApplication.class.getResource("hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(ScoreboardApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
-        stage.setTitle("Hello!");
+        stage.setTitle("Badgelife Trivia Scoreboard");
         stage.setScene(scene);
 
         // Exit the application when the main window is closed
