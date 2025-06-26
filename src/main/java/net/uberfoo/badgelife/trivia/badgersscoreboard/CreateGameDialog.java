@@ -3,10 +3,12 @@ package net.uberfoo.badgelife.trivia.badgersscoreboard;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Category;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Team;
@@ -82,9 +84,12 @@ public class CreateGameDialog extends Dialog<Game> {
                 return null;
             }
         });
-        getDialogPane().lookupButton(createButton).disableProperty()
-                .bind(teamsList.itemsProperty().isNull().or(questionsFileLabel.textProperty().isEmpty()));
 
+        getDialogPane().lookupButton(createButton).disableProperty()
+                .bind(Bindings.isEmpty(teamsList.getItems()).or(questionsFileLabel.textProperty().isEmpty()));
+
+        initModality(Modality.APPLICATION_MODAL);
+        setResizable(false);
         setTitle("Create Game");
         setHeaderText("Create a new game");
         initOwner(ownerStage);

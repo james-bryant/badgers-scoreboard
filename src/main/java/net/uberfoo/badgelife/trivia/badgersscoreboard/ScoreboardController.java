@@ -1,5 +1,6 @@
 package net.uberfoo.badgelife.trivia.badgersscoreboard;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -17,12 +18,11 @@ import java.io.IOException;
 
 public class ScoreboardController {
 
-    @Setter
-    private Stage ownerStage;
-
     private final Stage scoreboardStage = new Stage();
+    private final ObjectProperty<Game> gameProperty;
 
-    public ScoreboardController() {
+    public ScoreboardController(ObjectProperty<Game> gameProperty) {
+        this.gameProperty = gameProperty;
         Label scoreboardLabel = new Label("Bagelife Trivia");
 
         VBox scoreboardLayout = new VBox(10, scoreboardLabel);
