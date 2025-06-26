@@ -35,8 +35,12 @@ public class ScoreboardController {
         // Add starting scene
         scoreboardStage.setScene(secondaryScene);
 
+        // Find a secondary screen if present, otherwise use primary
+        Screen screen = Screen.getScreens().stream().filter(s -> !s.equals(Screen.getPrimary()))
+                .findFirst().orElse(Screen.getPrimary());
+
         // Set the stage to full screen
-        var screenBounds = Screen.getPrimary().getBounds();
+        var screenBounds = screen.getBounds();
         scoreboardStage.setX(screenBounds.getMinX());
         scoreboardStage.setY(screenBounds.getMinY());
         scoreboardStage.setWidth(screenBounds.getWidth());
