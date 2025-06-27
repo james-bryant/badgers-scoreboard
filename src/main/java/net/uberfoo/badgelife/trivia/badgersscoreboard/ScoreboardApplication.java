@@ -30,7 +30,7 @@ public class ScoreboardApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(ScoreboardApplication.class.getResource("main-view.fxml"));
         Parent root = fxmlLoader.load();
         fxmlLoader.<MainController>getController().setOwnerStage(stage);
-        Scene scene = new Scene(root, 320, 240);
+        Scene scene = new Scene(root, 500, 500);
         stage.setTitle("Badgelife Trivia Scoreboard");
         stage.setScene(scene);
 

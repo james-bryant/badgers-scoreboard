@@ -1,6 +1,5 @@
 package net.uberfoo.badgelife.trivia.badgersscoreboard;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import javafx.beans.binding.Bindings;
@@ -9,24 +8,17 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Setter;
-import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Category;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Team;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.prefs.Preferences;
 
 public class MainController {
@@ -34,6 +26,7 @@ public class MainController {
     private static final Preferences preferences = Preferences.userNodeForPackage(MainController.class);
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
+    @FXML private TextField saveGameTextField;
     @FXML private ListView<String> categoryListView;
     @FXML private Button showScores;
     @FXML private GridPane wagerGridPane1;
@@ -98,6 +91,8 @@ public class MainController {
 
         enterWagersButton.disableProperty().bind(roundStateProperty.isNull()
                 .or(roundStateProperty.isNotEqualTo(RoundState.WAGERING)));
+
+        saveGameButton.disableProperty().bind(gameProperty.isNull());
     }
 
     @FXML
@@ -136,15 +131,15 @@ public class MainController {
         fileChooser.initialDirectoryProperty()
                 .setValue(Path.of(preferences.get("LAST_SAVE_GAME_PATH", System.getProperty("user.home"))).toFile());
 
-        java.io.File file = fileChooser.showSaveDialog(ownerStage);
+        File file = fileChooser.showSaveDialog(ownerStage);
         if (file != null) {
-            mapper.findAndRegisterModules();
             try {
                 Files.write(file.toPath(), mapper.writeValueAsBytes(gameProperty.get()));
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
+            saveGameTextField.setText(file.getAbsolutePath());
             preferences.put("LAST_SAVE_GAME_PATH", file.getParentFile().getPath());
         }
 
@@ -167,7 +162,7 @@ public class MainController {
 
     @FXML
     protected void onSelectCategoryButton() {
-        categoryNameProperty.setValue((String) categoryListView.getSelectionModel().getSelectedItem());
+        categoryNameProperty.setValue(categoryListView.getSelectionModel().getSelectedItem());
         roundStateProperty.setValue(RoundState.WAGERING);
     }
 }
