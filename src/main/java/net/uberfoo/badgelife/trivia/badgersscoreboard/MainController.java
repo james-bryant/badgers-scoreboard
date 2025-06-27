@@ -26,6 +26,7 @@ public class MainController {
     private static final Preferences preferences = Preferences.userNodeForPackage(MainController.class);
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
+    @FXML private GridPane scoringPane;
     @FXML private TextField saveGameTextField;
     @FXML private ListView<String> categoryListView;
     @FXML private Button showScores;
@@ -44,6 +45,8 @@ public class MainController {
 
     @Setter
     private Stage ownerStage;
+
+    private final ToggleGroup scoringToggleGroup = new ToggleGroup();
 
     private final ObjectProperty<ScoreboardController> scoreboardControllerProperty = new SimpleObjectProperty<>();
     private final ObjectProperty<Game> gameProperty = new SimpleObjectProperty<>();
@@ -71,16 +74,24 @@ public class MainController {
 
         gameProperty.addListener((observable, oldValue, newValue) -> {
             wagerGridPane.getChildren().clear();
+            scoringPane.getChildren().clear();
             if (newValue != null) {
                 newValue.getTeams().forEach(team -> {
-                    var label = new Label(team.getName());
+                    var wagerLabel = new Label(team.getName());
                     var textField = new TextField();
-                    wagerGridPane.addRow(wagerGridPane.getRowCount(), label, textField);
+                    wagerGridPane.addRow(wagerGridPane.getRowCount(), wagerLabel, textField);
+
+                    var scoringRadioButton = new RadioButton(team.getName());
+                    scoringRadioButton.setUserData(team);
+                    scoringRadioButton.setToggleGroup(scoringToggleGroup);
+                    scoringPane.addRow(scoringPane.getRowCount(), scoringRadioButton);
                 });
             }
         });
 
         showScores.disableProperty().bind(roundStateProperty.isNull());
+
+        showQuestionButton.disableProperty().bind(roundStateProperty.isNotEqualTo(RoundState.ANSWERING));
 
         showCategoriesButton.disableProperty().bind(roundStateProperty.isNull()
                 .or(roundStateProperty.isNotEqualTo(RoundState.START)));
@@ -154,9 +165,8 @@ public class MainController {
 
     @FXML
     protected void onShowCategoriesButton() {
-        gameProperty.get().getQuestionBank().forEach(category -> {
-            categoryListView.getItems().add(category.getName());
-        });
+        gameProperty.get().getQuestionBank()
+                .forEach(category -> categoryListView.getItems().add(category.getName()));
         roundStateProperty.setValue(RoundState.CATEGORY_SELECTION);
     }
 
