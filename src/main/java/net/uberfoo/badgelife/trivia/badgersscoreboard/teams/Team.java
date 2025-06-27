@@ -2,8 +2,6 @@ package net.uberfoo.badgelife.trivia.badgersscoreboard.teams;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.experimental.Accessors;
-import lombok.experimental.Delegate;
 
 import java.util.List;
 
@@ -23,7 +21,7 @@ public class Team {
 
     public int totalScore() {
         return scores.stream()
-                .mapToInt(Score::getScore)
+                .mapToInt(Score::score)
                 .sum() + STARTING_SCORE;
     }
 

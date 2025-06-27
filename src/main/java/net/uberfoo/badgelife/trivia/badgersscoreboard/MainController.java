@@ -13,12 +13,17 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
+import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Category;
+import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Question;
+import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Score;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Team;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 public class MainController {
@@ -26,9 +31,10 @@ public class MainController {
     private static final Preferences preferences = Preferences.userNodeForPackage(MainController.class);
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
+    @FXML private TextArea questionTextArea;
     @FXML private GridPane scoringPane;
     @FXML private TextField saveGameTextField;
-    @FXML private ListView<String> categoryListView;
+    @FXML private ListView<Category> categoryListView;
     @FXML private Button showScores;
     @FXML private GridPane wagerGridPane1;
     @FXML private Button showQuestionButton;
@@ -76,25 +82,26 @@ public class MainController {
             wagerGridPane.getChildren().clear();
             scoringPane.getChildren().clear();
             if (newValue != null) {
+                // Populate wager grid pane with teams
                 newValue.getTeams().forEach(team -> {
-                    var wagerLabel = new Label(team.getName());
-                    var textField = new TextField();
-                    wagerGridPane.addRow(wagerGridPane.getRowCount(), wagerLabel, textField);
-
-                    var scoringRadioButton = new RadioButton(team.getName());
-                    scoringRadioButton.setUserData(team);
-                    scoringRadioButton.setToggleGroup(scoringToggleGroup);
-                    scoringPane.addRow(scoringPane.getRowCount(), scoringRadioButton);
+                    if (team.totalScore() > 0) {
+                        var wagerLabel = new Label(team.getName());
+                        var textField = new TextField();
+                        textField.setUserData(team);
+                        wagerLabel.setUserData(team);
+                        wagerGridPane.addRow(wagerGridPane.getRowCount(), wagerLabel, textField);
+                    }
                 });
             }
         });
 
-        showScores.disableProperty().bind(roundStateProperty.isNull());
+        showScores.disableProperty().bind(roundStateProperty.isNotEqualTo(RoundState.ANSWERING));
 
-        showQuestionButton.disableProperty().bind(roundStateProperty.isNotEqualTo(RoundState.ANSWERING));
+        showQuestionButton.disableProperty().bind(roundStateProperty.isNotEqualTo(RoundState.QUESTION_SELECTION));
 
         showCategoriesButton.disableProperty().bind(roundStateProperty.isNull()
-                .or(roundStateProperty.isNotEqualTo(RoundState.START)));
+                .or(roundStateProperty.isNotEqualTo(RoundState.START)
+                        .and(roundStateProperty.isNotEqualTo(RoundState.SHOW_SCORES))));
 
         selectCategoryButton.disableProperty().bind(roundStateProperty.isNull()
                 .or(roundStateProperty.isNotEqualTo(RoundState.CATEGORY_SELECTION))
@@ -104,6 +111,14 @@ public class MainController {
                 .or(roundStateProperty.isNotEqualTo(RoundState.WAGERING)));
 
         saveGameButton.disableProperty().bind(gameProperty.isNull());
+
+        categoryListView.setCellFactory(lv -> new ListCell<Category>() {
+            @Override
+            protected void updateItem(Category item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName());
+            }
+        });
     }
 
     @FXML
@@ -151,6 +166,7 @@ public class MainController {
             }
 
             saveGameTextField.setText(file.getAbsolutePath());
+            saveGameTextField.setUserData(file);
             preferences.put("LAST_SAVE_GAME_PATH", file.getParentFile().getPath());
         }
 
@@ -165,14 +181,94 @@ public class MainController {
 
     @FXML
     protected void onShowCategoriesButton() {
+        categoryListView.getItems().clear();
         gameProperty.get().getQuestionBank()
-                .forEach(category -> categoryListView.getItems().add(category.getName()));
+                .forEach(category -> categoryListView.getItems().add(category));
         roundStateProperty.setValue(RoundState.CATEGORY_SELECTION);
     }
 
     @FXML
     protected void onSelectCategoryButton() {
-        categoryNameProperty.setValue(categoryListView.getSelectionModel().getSelectedItem());
+        categoryNameProperty.setValue(categoryListView.getSelectionModel().getSelectedItem().getName());
         roundStateProperty.setValue(RoundState.WAGERING);
+    }
+
+    @FXML
+    protected void onEnterWagersButton() {
+        List<Question> questions = categoryListView.getSelectionModel().getSelectedItem().getQuestions();
+        SecureRandom random = new SecureRandom();
+        int i = random.nextInt(questions.size());
+        var question = questions.get(i);
+        wagerGridPane.getChildren().stream().filter(n -> n instanceof TextField).map(n -> (TextField)n)
+                .forEach(tf -> {
+            var team = (Team) tf.getUserData();
+            try {
+                var wager = Integer.parseInt(tf.getText());
+                if (wager < 0) {
+                    throw new NumberFormatException("Wager cannot be negative");
+                }
+                if (wager > team.totalScore()) {
+                    throw new NumberFormatException("Wager cannot be greater than team's total score");
+                }
+                var score = new Score(false, question, wager);
+                team.addScore(score);
+
+                var scoringRadioButton = new RadioButton(team.getName());
+                scoringRadioButton.setUserData(score);
+                scoringRadioButton.setToggleGroup(scoringToggleGroup);
+                scoringPane.addRow(scoringPane.getRowCount(), scoringRadioButton);
+            } catch (NumberFormatException ex) {
+                Alert alert = new Alert(Alert.AlertType.ERROR,
+                        "Invalid wager for team " + team.getName() + ": " + ex.getMessage());
+                alert.showAndWait();
+                throw ex;
+            }
+        });
+        questions.remove(i);
+
+        saveGame();
+
+        questionTextArea.setText(question.getQuestion());
+        questionTextArea.setUserData(question);
+        roundStateProperty.setValue(RoundState.QUESTION_SELECTION);
+    }
+
+    @FXML
+    protected void onShowQuestion() {
+        questionTextArea.setText("Answer: " + ((Question)questionTextArea.getUserData()).getAnswer());
+        roundStateProperty.setValue(RoundState.ANSWERING);
+    }
+
+    @FXML
+    protected void onShowScores() {
+        var selectedToggle = scoringToggleGroup.getSelectedToggle();
+        if (selectedToggle == null) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "No team selected! Are you sure?");
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                saveGame();
+                roundStateProperty.setValue(RoundState.SHOW_SCORES);
+            }
+            return;
+        }
+
+        scoringPane.getChildren().clear();
+        var score = (Score) selectedToggle.getUserData();
+        score.setCorrect(true);
+        saveGame();
+
+        roundStateProperty.setValue(RoundState.SHOW_SCORES);
+    }
+
+
+    private void saveGame() {
+        // Persist game state if save path exists
+        File file;
+        if ((file = (File)saveGameTextField.getUserData()) != null) {
+            try {
+                Files.write(file.toPath(), mapper.writeValueAsBytes(gameProperty.get()));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 }
