@@ -15,11 +15,15 @@ import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Team;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class CreateGameDialog extends Dialog<Game> {
+
+    private static final Preferences preferences = Preferences.userNodeForPackage(CreateGameDialog.class);
 
     @FXML
     private Label questionsFileLabel;
@@ -97,11 +101,15 @@ public class CreateGameDialog extends Dialog<Game> {
 
     protected void onChooseFileButton() {
         FileChooser fileChooser = new FileChooser();
+
         fileChooser.setTitle("Select File");
-        java.io.File file = fileChooser.showOpenDialog(
-                questionsFileLabel.getScene().getWindow());
+        fileChooser.initialDirectoryProperty()
+                .setValue(Path.of(preferences.get("LAST_PATH", System.getProperty("user.home"))).toFile());
+
+        java.io.File file = fileChooser.showOpenDialog(getOwner());
         if (file != null) {
             questionsFileLabel.setText(file.getAbsolutePath());
+            preferences.put("LAST_PATH", file.getParentFile().getPath());
         }
 
     }

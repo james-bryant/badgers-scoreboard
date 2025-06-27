@@ -20,9 +20,11 @@ public class ScoreboardController {
 
     private final Stage scoreboardStage = new Stage();
     private final ObjectProperty<Game> gameProperty;
+    private final ObjectProperty<RoundState> roundStateProperty;
 
-    public ScoreboardController(ObjectProperty<Game> gameProperty) {
+    public ScoreboardController(ObjectProperty<Game> gameProperty, ObjectProperty<RoundState> roundStateProperty) {
         this.gameProperty = gameProperty;
+        this.roundStateProperty = roundStateProperty;
         Label scoreboardLabel = new Label("Bagelife Trivia");
 
         VBox scoreboardLayout = new VBox(10, scoreboardLabel);
