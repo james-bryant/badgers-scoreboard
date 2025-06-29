@@ -12,7 +12,6 @@ public class Team {
     private static final int STARTING_SCORE = 1000;
 
     private String name;
-
     private List<Score> scores;
 
     public Team() {
