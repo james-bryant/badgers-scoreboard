@@ -52,7 +52,7 @@ public class MainController {
     @Setter
     private Stage ownerStage;
 
-    private final ToggleGroup scoringToggleGroup = new ToggleGroup();
+    private ToggleGroup scoringToggleGroup;
 
     private final ObjectProperty<ScoreboardController> scoreboardControllerProperty = new SimpleObjectProperty<>();
     private final ObjectProperty<Game> gameProperty = new SimpleObjectProperty<>();
@@ -120,6 +120,8 @@ public class MainController {
                 setText(empty || item == null ? null : item.getName());
             }
         });
+
+        scoringToggleGroup = new ToggleGroup();
     }
 
     @FXML
@@ -236,7 +238,9 @@ public class MainController {
 
     @FXML
     protected void onShowQuestion() {
-        questionTextArea.setText("Answer: " + questionProperty.get().getAnswer());
+        questionTextArea.setText(
+                "Question: " + questionProperty.get().getQuestion() + "\n" +
+                "Answer: " + questionProperty.get().getAnswer());
         roundStateProperty.setValue(RoundState.ANSWERING);
     }
 
