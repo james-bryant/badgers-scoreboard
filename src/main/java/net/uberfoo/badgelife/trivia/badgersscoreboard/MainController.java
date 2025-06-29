@@ -58,6 +58,7 @@ public class MainController {
     private final ObjectProperty<Game> gameProperty = new SimpleObjectProperty<>();
     private final ObjectProperty<RoundState> roundStateProperty = new SimpleObjectProperty<>();
     private final StringProperty categoryNameProperty = new SimpleStringProperty();
+    private final ObjectProperty<Question> questionProperty = new SimpleObjectProperty<>();
 
     @FXML
     protected void initialize() {
@@ -174,7 +175,7 @@ public class MainController {
 
     @FXML
     protected void onShowScoreboardButton() {
-        scoreboardControllerProperty.set(new ScoreboardController(gameProperty, roundStateProperty));
+        scoreboardControllerProperty.set(new ScoreboardController(gameProperty, roundStateProperty, categoryNameProperty, questionProperty));
         roundStateProperty.setValue(RoundState.START);
         ownerStage.requestFocus();
     }
@@ -229,13 +230,13 @@ public class MainController {
         saveGame();
 
         questionTextArea.setText(question.getQuestion());
-        questionTextArea.setUserData(question);
+        questionProperty.set(question);
         roundStateProperty.setValue(RoundState.QUESTION_SELECTION);
     }
 
     @FXML
     protected void onShowQuestion() {
-        questionTextArea.setText("Answer: " + ((Question)questionTextArea.getUserData()).getAnswer());
+        questionTextArea.setText("Answer: " + questionProperty.get().getAnswer());
         roundStateProperty.setValue(RoundState.ANSWERING);
     }
 
