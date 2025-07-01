@@ -37,7 +37,7 @@
            </columnConstraints>
          </GridPane>
          <Button fx:id="enterWagersButton" mnemonicParsing="false" onAction="#onEnterWagersButton" text="Enter Wagers" />
-         <TextArea fx:id="questionTextArea" prefHeight="200.0" prefWidth="200.0" />
+         <TextArea fx:id="questionTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
          <Button fx:id="showQuestionButton" mnemonicParsing="false" onAction="#onShowQuestion" text="Show Question" />
          <GridPane fx:id="scoringPane" layoutX="20.0" layoutY="223.0" prefHeight="0.0" prefWidth="480.0">
             <columnConstraints>
