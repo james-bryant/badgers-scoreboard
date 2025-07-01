@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 public class MainController {
@@ -36,7 +38,6 @@ public class MainController {
     @FXML private TextField saveGameTextField;
     @FXML private ListView<Category> categoryListView;
     @FXML private Button showScores;
-    @FXML private GridPane wagerGridPane1;
     @FXML private Button showQuestionButton;
     @FXML private Button enterWagersButton;
     @FXML private Button selectCategoryButton;
@@ -59,6 +60,7 @@ public class MainController {
     private final ObjectProperty<RoundState> roundStateProperty = new SimpleObjectProperty<>();
     private final StringProperty categoryNameProperty = new SimpleStringProperty();
     private final ObjectProperty<Question> questionProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<Map<Team, Score>> wagersProperty = new SimpleObjectProperty<>(new HashMap<>());
 
     @FXML
     protected void initialize() {
@@ -162,7 +164,8 @@ public class MainController {
 
     @FXML
     protected void onShowScoreboardButton() {
-        scoreboardControllerProperty.set(new ScoreboardController(gameProperty, roundStateProperty, categoryNameProperty, questionProperty));
+        scoreboardControllerProperty.set(new ScoreboardController(gameProperty, roundStateProperty,
+                categoryNameProperty, questionProperty, wagersProperty));
         roundStateProperty.setValue(RoundState.START);
         ownerStage.requestFocus();
     }
@@ -181,7 +184,7 @@ public class MainController {
         wagerGridPane.getChildren().clear();
         gameProperty.get().getTeams().forEach(team -> {
             if (team.totalScore() > 0) {
-                var wagerLabel = new Label(team.getName());
+                var wagerLabel = new Label(team.getName() + " (" + team.totalScore() + ")");
                 var textField = new TextField();
                 textField.setUserData(team);
                 wagerLabel.setUserData(team);
@@ -198,6 +201,8 @@ public class MainController {
         SecureRandom random = new SecureRandom();
         int i = random.nextInt(questions.size());
         var question = questions.get(i);
+        var wagers = new HashMap<Team, Score>();
+
         wagerGridPane.getChildren().stream().filter(n -> n instanceof TextField).map(n -> (TextField)n)
                 .forEach(tf -> {
             var team = (Team) tf.getUserData();
@@ -212,10 +217,7 @@ public class MainController {
                 var score = new Score(false, question, wager);
                 team.addScore(score);
 
-                var scoringRadioButton = new RadioButton(team.getName());
-                scoringRadioButton.setUserData(score);
-                scoringRadioButton.setToggleGroup(scoringToggleGroup);
-                scoringPane.addRow(scoringPane.getRowCount(), scoringRadioButton);
+                wagers.put(team, score);
             } catch (NumberFormatException ex) {
                 Alert alert = new Alert(Alert.AlertType.ERROR,
                         "Invalid wager for team " + team.getName() + ": " + ex.getMessage());
@@ -223,10 +225,8 @@ public class MainController {
                 throw ex;
             }
         });
-        var noScoreRadioButton = new RadioButton("--No Score--");
-        noScoreRadioButton.setUserData(null);
-        noScoreRadioButton.setToggleGroup(scoringToggleGroup);
-        scoringPane.addRow(scoringPane.getRowCount(), noScoreRadioButton);
+        wagersProperty.set(wagers);
+
         questions.remove(i);
 
         saveGame();
@@ -241,6 +241,20 @@ public class MainController {
         questionTextArea.setText(
                 "Question: " + questionProperty.get().getQuestion() + "\n" +
                 "Answer: " + questionProperty.get().getAnswer());
+
+        wagersProperty.get().forEach((team, score) -> {
+            var points = Math.round(score.getWagered() * questionProperty.get().getPayout());
+            var scoreRadioButton = new RadioButton(team.getName() + " (" + points  + ")");
+            scoreRadioButton.setUserData(score);
+            scoreRadioButton.setToggleGroup(scoringToggleGroup);
+            scoringPane.addRow(scoringPane.getRowCount(), scoreRadioButton);
+        });
+
+        var noScoreRadioButton = new RadioButton("--No Score--");
+        noScoreRadioButton.setUserData(null);
+        noScoreRadioButton.setToggleGroup(scoringToggleGroup);
+        scoringPane.addRow(scoringPane.getRowCount(), noScoreRadioButton);
+
         roundStateProperty.setValue(RoundState.ANSWERING);
     }
 

@@ -14,6 +14,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Category;
 import net.uberfoo.badgelife.trivia.badgersscoreboard.questions.Question;
+import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Score;
+import net.uberfoo.badgelife.trivia.badgersscoreboard.teams.Team;
+
+import java.util.Map;
 
 public class ScoreboardController {
 
@@ -21,12 +25,16 @@ public class ScoreboardController {
     private final ObjectProperty<RoundState> roundStateProperty;
     private final StringProperty categoryProperty;
     private final ObjectProperty<Question> questionProperty;
+    private final ObjectProperty<Map<Team, Score>> wagersProperty;
 
-    public ScoreboardController(ObjectProperty<Game> gameProperty, ObjectProperty<RoundState> roundStateProperty, StringProperty categoryProperty, ObjectProperty<Question> questionProperty) {
+    public ScoreboardController(ObjectProperty<Game> gameProperty, ObjectProperty<RoundState> roundStateProperty,
+                                StringProperty categoryProperty, ObjectProperty<Question> questionProperty,
+                                ObjectProperty<Map<Team, Score>> wagersProperty) {
         this.gameProperty = gameProperty;
         this.roundStateProperty = roundStateProperty;
         this.categoryProperty = categoryProperty;
         this.questionProperty = questionProperty;
+        this.wagersProperty = wagersProperty;
         Label scoreboardLabel = new Label("Badgelife Trivia");
         scoreboardLabel.setTextFill(Color.WHITE);
 
@@ -82,10 +90,14 @@ public class ScoreboardController {
                     );
                 }
                 case QUESTION_SELECTION -> {
-                    scoreboardLabel.setText("Ready for question?");
+                    scoreboardLabel.setText(String.join("\n",
+                                wagersProperty.get().entrySet().stream()
+                                        .map(entry -> entry.getKey().getName() + ": " + entry.getValue().getWagered())
+                                        .toList()
+                            ));
                     scoreboardLabel.setStyle(String.format(
                             "-fx-font-size: %dpx; -fx-font-family: 'Roboto Slab'; -fx-font-weight: 500; -fx-text-alignment: center;"
-                            , Math.round(screenBounds.getHeight() / 5))
+                            , Math.round(screenBounds.getHeight() / 10))
                     );
                 }
                 case ANSWERING -> {
@@ -94,7 +106,7 @@ public class ScoreboardController {
 
                     scoreboardLabel.setStyle(String.format(
                             "-fx-font-size: %dpx; -fx-font-family: 'Roboto Slab'; -fx-font-weight: 500; -fx-text-alignment: center;"
-                            , Math.round(screenBounds.getHeight() / 7))
+                            , Math.round(screenBounds.getHeight() / 8))
                     );
                 }
                 case SHOW_SCORES -> {
