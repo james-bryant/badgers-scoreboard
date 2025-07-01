@@ -66,6 +66,8 @@ public class MainController {
 
         gameProperty.addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
+                wagerGridPane.getChildren().clear();
+                scoringPane.getChildren().clear();
                 var teams = String.join(", ",
                         newValue.getTeams().stream().map(Team::getName).toArray(String[]::new));
                 gameTextArea.setText(String.format("""
@@ -78,23 +80,6 @@ public class MainController {
         });
 
         showScoreboardButton.disableProperty().bind(scoreboardControllerProperty.isNotNull());
-
-        gameProperty.addListener((observable, oldValue, newValue) -> {
-            wagerGridPane.getChildren().clear();
-            scoringPane.getChildren().clear();
-            if (newValue != null) {
-                // Populate wager grid pane with teams
-                newValue.getTeams().forEach(team -> {
-                    if (team.totalScore() > 0) {
-                        var wagerLabel = new Label(team.getName());
-                        var textField = new TextField();
-                        textField.setUserData(team);
-                        wagerLabel.setUserData(team);
-                        wagerGridPane.addRow(wagerGridPane.getRowCount(), wagerLabel, textField);
-                    }
-                });
-            }
-        });
 
         showScores.disableProperty().bind(roundStateProperty.isNotEqualTo(RoundState.ANSWERING));
 
@@ -193,6 +178,17 @@ public class MainController {
     @FXML
     protected void onSelectCategoryButton() {
         categoryNameProperty.setValue(categoryListView.getSelectionModel().getSelectedItem().getName());
+        wagerGridPane.getChildren().clear();
+        gameProperty.get().getTeams().forEach(team -> {
+            if (team.totalScore() > 0) {
+                var wagerLabel = new Label(team.getName());
+                var textField = new TextField();
+                textField.setUserData(team);
+                wagerLabel.setUserData(team);
+                wagerGridPane.addRow(wagerGridPane.getRowCount(), wagerLabel, textField);
+            }
+        });
+
         roundStateProperty.setValue(RoundState.WAGERING);
     }
 
@@ -227,6 +223,10 @@ public class MainController {
                 throw ex;
             }
         });
+        var noScoreRadioButton = new RadioButton("--No Score--");
+        noScoreRadioButton.setUserData(null);
+        noScoreRadioButton.setToggleGroup(scoringToggleGroup);
+        scoringPane.addRow(scoringPane.getRowCount(), noScoreRadioButton);
         questions.remove(i);
 
         saveGame();
@@ -247,20 +247,23 @@ public class MainController {
     @FXML
     protected void onShowScores() {
         var selectedToggle = scoringToggleGroup.getSelectedToggle();
-        if (selectedToggle == null) {
+        if (selectedToggle == null || selectedToggle.getUserData() == null) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "No team selected! Are you sure?");
             if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 saveGame();
+                scoringPane.getChildren().clear();
+                scoringToggleGroup = new ToggleGroup();
                 roundStateProperty.setValue(RoundState.SHOW_SCORES);
             }
             return;
         }
 
-        scoringPane.getChildren().clear();
         var score = (Score) selectedToggle.getUserData();
         score.setCorrect(true);
         saveGame();
 
+        scoringPane.getChildren().clear();
+        scoringToggleGroup = new ToggleGroup();
         roundStateProperty.setValue(RoundState.SHOW_SCORES);
     }
 
